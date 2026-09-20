@@ -1,0 +1,16 @@
+body {
+    background-color: #f5f7fa;
+}
+.card {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.priority-high {
+    border-left: 4px solid #dc3545;
+}
+.priority-medium {
+    border-left: 4px solid #fd7e14;
+}
+.priority-low {
+    border-left: 4px solid #198754;
+}

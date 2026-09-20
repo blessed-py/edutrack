@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: ./docker/php
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_NAME: edutrack
+      DB_USER: edutrack
+      DB_PASSWORD: edutrack_password
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: edutrack
+      MYSQL_USER: edutrack
+      MYSQL_PASSWORD: edutrack_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:
