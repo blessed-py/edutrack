@@ -55,17 +55,51 @@ $totalCount = (int) $totalCountStmt->fetchColumn();
 
 $percent = $totalCount > 0 ? round(($completedCount / $totalCount) * 100) : 0;
 
+$sessionsByTopic = $pdo->prepare(
+    'SELECT t.name AS topic_name, c.name AS course_name, COUNT(s.id) AS session_count
+     FROM study_sessions s
+     JOIN topics t ON t.id = s.topic_id
+     JOIN courses c ON c.id = t.course_id
+     WHERE c.user_id = ?
+     GROUP BY t.id, t.name, c.name
+     ORDER BY session_count DESC
+     LIMIT 5'
+);
+$sessionsByTopic->execute([$user['id']]);
+$sessionsByTopic = $sessionsByTopic->fetchAll(PDO::FETCH_ASSOC);
+$maxSessions = $sessionsByTopic ? max(array_column($sessionsByTopic, 'session_count')) : 0;
+
 require __DIR__ . '/includes/header.php';
 ?>
 <h2 class="mb-4">Study Progress</h2>
 
-<div class="card p-3 mb-4">
-  <div class="d-flex justify-content-between mb-1">
-    <span>Overall topic completion</span>
-    <span><?= $completedCount ?> / <?= $totalCount ?> (<?= $percent ?>%)</span>
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card p-3 h-100 d-flex flex-row align-items-center gap-3">
+      <div class="progress-ring" style="--pct: <?= $percent ?>;"><span><?= $percent ?>%</span></div>
+      <div>
+        <h6 class="mb-1">Overall Topic Completion</h6>
+        <div class="text-muted small"><?= $completedCount ?> of <?= $totalCount ?> topics completed</div>
+      </div>
+    </div>
   </div>
-  <div class="progress" style="height: 10px;">
-    <div class="progress-bar bg-success" style="width: <?= $percent ?>%"></div>
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h6 class="mb-2">Most Studied Topics</h6>
+      <?php if (!$sessionsByTopic): ?>
+        <p class="text-muted mb-0 small">Log a study session below to see this chart fill in.</p>
+      <?php else: ?>
+        <?php foreach ($sessionsByTopic as $s): $pct = $maxSessions > 0 ? round(($s['session_count'] / $maxSessions) * 100) : 0; ?>
+          <div class="viz-bar-row">
+            <div class="viz-bar-label">
+              <span><?= htmlspecialchars($s['topic_name']) ?> <span class="text-muted">(<?= htmlspecialchars($s['course_name']) ?>)</span></span>
+              <span><?= $s['session_count'] ?> session<?= $s['session_count'] == 1 ? '' : 's' ?></span>
+            </div>
+            <div class="viz-bar-track"><div class="viz-bar-fill" style="width: <?= $pct ?>%"></div></div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
   </div>
 </div>
 

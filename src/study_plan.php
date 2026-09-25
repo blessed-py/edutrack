@@ -18,12 +18,20 @@ $hoursStmt->execute([$user['id']]);
 $availableHours = (float) $hoursStmt->fetchColumn();
 
 $plan = build_study_plan($pdo, $user['id'], $availableHours);
+$maxScore = $plan ? max(array_column($plan, 'priority_score')) : 0;
 
 function priority_class(float $score): string
 {
     if ($score >= 0.5) return 'priority-high';
     if ($score >= 0.25) return 'priority-medium';
     return 'priority-low';
+}
+
+function priority_bar_class(float $score): string
+{
+    if ($score >= 0.5) return 'critical';
+    if ($score >= 0.25) return 'warning';
+    return 'good';
 }
 
 require __DIR__ . '/includes/header.php';
@@ -58,6 +66,9 @@ require __DIR__ . '/includes/header.php';
           <?php if ($item['is_weak']): ?><span class="badge bg-danger">Weak</span><?php endif; ?>
         </div>
         <span class="badge bg-primary"><?= $item['allocated_hours'] ?> hrs today</span>
+      </div>
+      <div class="viz-bar-track mt-2" style="max-width: 320px;">
+        <div class="viz-bar-fill <?= priority_bar_class($item['priority_score']) ?>" style="width: <?= $maxScore > 0 ? round(($item['priority_score'] / $maxScore) * 100) : 0 ?>%"></div>
       </div>
       <div class="small text-muted mt-1">
         Priority score: <?= round($item['priority_score'], 3) ?>

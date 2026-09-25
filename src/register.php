@@ -33,7 +33,8 @@ require __DIR__ . '/includes/header.php';
 ?>
 <div class="row justify-content-center">
   <div class="col-md-5">
-    <div class="card p-4 mt-4">
+    <p class="mt-4 mb-2"><a href="/">&larr; EduTrack</a></p>
+    <div class="card p-4">
       <h3 class="mb-3">Create your EduTrack account</h3>
       <?php if ($error): ?><div class="alert alert-danger"><?= htmlspecialchars($error) ?></div><?php endif; ?>
       <form method="post">
